@@ -2,7 +2,7 @@
 Web UI untuk Scraper Berita Online Indonesia.
 Jalankan:  python app.py   lalu buka http://127.0.0.1:5050
 """
-from flask import Flask, request, render_template, send_from_directory, abort
+from flask import Flask, request, render_template, send_from_directory, abort, redirect, url_for
 from datetime import datetime
 import os
 import re
@@ -24,6 +24,7 @@ SITES = [
     ('cnn',      'CNNIndonesia.com', 'scrape_cnn',      'browser'),
     ('liputan6', 'Liputan6.com',     'scrape_liputan6', 'browser'),
     ('tempo',    'Tempo.co',         'scrape_tempo',    'browser'),
+    ('google_news', 'Google News · berbagai media', 'scrape_google_news', 'aggregator'),
 ]
 
 
@@ -35,8 +36,11 @@ def index():
                                   csv_name=None, xlsx_name=None)
 
 
-@app.route('/scrape', methods=['POST'])
+@app.route('/scrape', methods=['GET', 'POST'])
 def scrape():
+    if request.method == 'GET':
+        return redirect(url_for('index'))
+
     keyword = (request.form.get('keyword') or '').strip()
     selected = set(request.form.getlist('site')) & {site[0] for site in SITES}
     if not keyword:

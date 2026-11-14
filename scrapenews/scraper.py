@@ -2,6 +2,9 @@ import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 from datetime import datetime
+from datetime import timedelta, timezone
+from email.utils import parsedate_to_datetime
+from xml.etree import ElementTree
 import os
 import urllib.parse
 import time
@@ -379,6 +382,52 @@ class OnlineMediaScraper:
             'https://www.liputan6.com/search?q={kw}&page={page}',
             keyword, start_date, end_date, max_articles,
             r'liputan6\.com/[^/]+/read/\d+/')
+
+    def scrape_google_news(self, keyword, start_date, end_date, max_articles=50):
+        """Cari liputan dari berbagai penerbit melalui RSS Google News.
+
+        Google News memperluas jangkauan ke media yang tidak memiliki scraper
+        khusus. Rentang akhir dibuat eksklusif di query agar tanggal akhir tetap
+        ikut tercakup, lalu tanggal RSS divalidasi kembali secara lokal.
+        """
+        print(f"Scraping Google News untuk keyword: {keyword}")
+        query = f"{keyword} after:{start_date.isoformat()} before:{(end_date + timedelta(days=1)).isoformat()}"
+        params = urllib.parse.urlencode({
+            'q': query,
+            'hl': 'id',
+            'gl': 'ID',
+            'ceid': 'ID:id',
+        })
+        url = f"https://news.google.com/rss/search?{params}"
+        try:
+            response = requests.get(url, headers=self.headers, timeout=20)
+            response.raise_for_status()
+            root = ElementTree.fromstring(response.content)
+        except Exception as exc:
+            print(f"Google News tidak dapat diakses: {exc}")
+            return
+
+        found = 0
+        for item in root.findall('./channel/item'):
+            if found >= max_articles:
+                break
+            title = (item.findtext('title') or '').strip()
+            article_url = (item.findtext('link') or '').strip()
+            source = item.find('source')
+            platform = (source.text or '').strip() if source is not None else 'Google News'
+            published = item.findtext('pubDate')
+            try:
+                article_date = parsedate_to_datetime(published) if published else None
+                if article_date and article_date.tzinfo:
+                    article_date = article_date.astimezone(timezone(timedelta(hours=7))).replace(tzinfo=None)
+            except (TypeError, ValueError, OverflowError):
+                article_date = None
+
+            if self._add_article(platform or 'Google News', title, article_url, keyword,
+                                 article_date, start_date, end_date):
+                found += 1
+
+        print(f"Selesai scraping Google News: {found} artikel ditemukan.")
 
     # ==================== Situs statis (requests + BeautifulSoup) ====================
 

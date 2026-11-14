@@ -9,7 +9,7 @@
 
 Ruang Berita membantu peneliti dan pemantau media menemukan artikel berita Indonesia berdasarkan kata kunci dan rentang tanggal. Pengguna memilih satu atau beberapa portal, menjalankan pencarian, meninjau hasil beserta relevansinya, lalu mengunduh hasil untuk analisis lanjutan.
 
-Produk saat ini berjalan sebagai aplikasi Flask lokal dan juga menyediakan alur terminal. Pengumpulan data dilakukan dari tujuh portal berita melalui HTTP/HTML statis atau browser Selenium. Hasil dapat diekspor untuk digunakan di luar aplikasi.
+Produk saat ini berjalan sebagai aplikasi Flask lokal dan juga menyediakan alur terminal. Pengumpulan data dilakukan dari portal berita melalui HTTP/HTML statis, browser Selenium, dan agregator Google News RSS. Hasil dapat diekspor untuk digunakan di luar aplikasi.
 
 ## 2. Masalah dan peluang
 
