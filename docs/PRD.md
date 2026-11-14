@@ -75,7 +75,7 @@ Asumsi produk saat ini adalah penggunaan lokal oleh satu pengguna. Akun, kolabor
 | FR-08 | Hasil duplikat lintas portal tidak ditampilkan berulang. | URL dinormalisasi dengan membuang fragmen dan garis miring penutup sebelum deduplikasi. |
 | FR-09 | Hasil dapat ditinjau dan dibuka dari aplikasi. | Tabel web menampilkan portal, tanggal, judul, skor relevansi, dan tautan untuk membuka artikel. Hasil diurutkan menurut relevansi lalu tanggal. |
 | FR-10 | Hasil dapat diekspor. | Aplikasi menyediakan CSV dan berupaya membuat XLSX; CLI juga membuat TXT berisi daftar artikel. Ekspor XLSX dapat dilewati jika dependensi tidak tersedia. |
-| FR-11 | Ketidaktersediaan browser tidak menghentikan pencarian seluruhnya. | Portal berbasis JavaScript dilewati jika Selenium/Chrome tidak tersedia; portal statis tetap dapat diproses. |
+| FR-11 | Ketidaktersediaan browser tidak menghentikan pencarian. | CNN Indonesia, Liputan6, dan Tempo memakai fallback RSS Google News jika Selenium/Chrome tidak tersedia atau pencarian langsung kosong. |
 | FR-12 | Pengguna mendapat umpan balik untuk hasil kosong. | Web menampilkan pesan bahwa tidak ada artikel yang cocok dan menyarankan kata kunci atau rentang tanggal lain. |
 
 ### Sumber dan batas pengumpulan
@@ -86,9 +86,9 @@ Asumsi produk saat ini adalah penggunaan lokal oleh satu pengguna. Akun, kolabor
 | Kompas.com | HTML statis | Membaca tanggal jika tersedia; permintaan memiliki retry untuk beberapa status server. |
 | Viva.co.id | HTML statis | Pencarian dibatasi hingga lima halaman. |
 | AntaraNews.com | HTML statis | Pencarian dibatasi hingga lima halaman. |
-| CNNIndonesia.com | Selenium/browser | Tanggal hasil tidak diambil oleh scraper saat ini. |
-| Liputan6.com | Selenium/browser | Tanggal hasil tidak diambil oleh scraper saat ini. |
-| Tempo.co | Selenium/browser | Tanggal hasil tidak diambil oleh scraper saat ini; akses dapat dibatasi situs. |
+| CNNIndonesia.com | Browser headless, fallback RSS Google News | Tanggal diambil dari elemen `time` bila tersedia; RSS digunakan bila hasil langsung kosong. |
+| Liputan6.com | Browser headless, fallback RSS Google News | Tanggal diambil dari elemen `time` bila tersedia; RSS digunakan bila hasil langsung kosong. |
+| Tempo.co | Browser headless, fallback RSS Google News | Tanggal diambil dari elemen `time` bila tersedia; RSS digunakan bila hasil langsung kosong. |
 
 Batas artikel berlaku per portal, bukan sebagai batas total hasil. Situs dapat berubah, membatasi permintaan, atau mengembalikan hasil kosong.
 
@@ -110,7 +110,7 @@ Nama file ekspor menggunakan prefiks kata kunci dan timestamp. File disimpan di 
 ## 8. Kebutuhan nonfungsional dan batasan
 
 - Aplikasi web berjalan secara lokal melalui Flask; port default adalah `5050` dan dapat diubah dengan variabel lingkungan `PORT`.
-- Pencarian memerlukan koneksi internet. Portal berbasis browser memerlukan Google Chrome dan Selenium.
+- Pencarian memerlukan koneksi internet. Google Chrome diperlukan untuk jalur browser langsung pada CNN Indonesia, Liputan6, dan Tempo; hasil Google News digunakan sebagai fallback.
 - Waktu proses dapat bertambah karena beberapa portal diproses berurutan dan sebagian memakai browser.
 - Kesalahan akses atau perubahan HTML portal dapat mengurangi atau menghentikan hasil dari portal terkait.
 - Penggunaan harus mematuhi ketentuan layanan dan `robots.txt` portal, serta menghindari permintaan berlebihan.
@@ -124,7 +124,7 @@ Nama file ekspor menggunakan prefiks kata kunci dan timestamp. File disimpan di 
 4. Hasil yang ditampilkan memuat sumber, tanggal, judul, relevansi, dan tautan artikel.
 5. URL duplikat tidak ditampilkan lebih dari sekali dalam satu sesi pencarian.
 6. Pengguna dapat mengunduh CSV dan, jika ekspor Excel tersedia, XLSX.
-7. Jika Selenium/Chrome tidak tersedia, proses tidak berhenti karena portal browser dan sumber statis tetap dapat dicari.
+7. Jika Selenium/Chrome tidak tersedia, CNN Indonesia, Liputan6, dan Tempo beralih ke pencarian RSS Google News; sumber lain tetap diproses.
 8. CLI dapat dijalankan untuk mencari semua portal dan menyimpan keluaran ke direktori hasil.
 
 ## 10. Indikator keberhasilan yang disarankan

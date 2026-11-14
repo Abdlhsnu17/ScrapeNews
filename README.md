@@ -47,15 +47,15 @@ Entry point `app.py` dan `main.py` di root menjaga perintah lama tetap berlaku.
 | Kompas.com | 🟢 Statis | Cepat & andal, ada tanggal |
 | Viva.co.id | 🟢 Statis | Cepat & andal, ada tanggal |
 | AntaraNews.com | 🟢 Statis | Cepat & andal, ada tanggal |
-| CNNIndonesia.com | 🟠 Browser | Perlu Chrome + Selenium (render JavaScript), tanpa tanggal |
-| Liputan6.com | 🟠 Browser | Perlu Chrome + Selenium, hasil tergantung keyword |
-| Tempo.co | 🟠 Browser | Perlu Chrome + Selenium, kadang kosong (situs membatasi bot) |
+| CNNIndonesia.com | 🟠 Otomatis | Coba pencarian langsung via browser, lalu RSS Google News jika kosong |
+| Liputan6.com | 🟠 Otomatis | Coba pencarian langsung via browser, lalu RSS Google News jika kosong |
+| Tempo.co | 🟠 Otomatis | Coba pencarian langsung via browser, lalu RSS Google News jika kosong |
 | Google News · berbagai media | 🟣 Agregator | RSS pencarian untuk memperluas hasil dari penerbit yang terindeks Google News |
 
 > **🟢 Statis** = cepat, cukup koneksi internet.
-> **🟠 Browser** = perlu Google Chrome terpasang. Selenium mengunduh driver otomatis.
+> **🟠 Otomatis** = memakai browser headless jika tersedia dan beralih ke RSS Google News bila pencarian langsung kosong. Chrome meningkatkan peluang hasil langsung.
 > **🟣 Agregator** = hasil berasal dari RSS pencarian Google News; penerbit dan jumlah artikel bergantung pada indeks serta feed yang tersedia.
-> Jika Chrome/Selenium tidak ada, portal 🟠 dilewati otomatis **tanpa membuat aplikasi error**.
+> Jika Chrome/Selenium tidak ada, sumber 🟠 tetap mencoba pencarian RSS Google News sebagai fallback.
 
 ---
 
@@ -63,7 +63,7 @@ Entry point `app.py` dan `main.py` di root menjaga perintah lama tetap berlaku.
 
 - Python 3.8+ (diuji di Python 3.12)
 - Koneksi internet
-- Google Chrome — **hanya** jika ingin memakai portal 🟠 (CNN, Liputan6, Tempo)
+- Google Chrome — opsional; diperlukan untuk mencoba pencarian langsung CNN, Liputan6, dan Tempo. RSS Google News tetap dipakai sebagai fallback.
 
 ---
 

@@ -307,16 +307,24 @@ class OnlineMediaScraper:
             self._driver = None
 
     def _scrape_js_site(self, platform, url_template, keyword, start_date, end_date,
-                        max_articles, href_regex, pages=3, wait=6):
-        """Scraper generik untuk situs yang dirender JavaScript. Merender halaman pencarian
-        dengan browser, lalu memanen tautan artikel yang cocok dengan pola & keyword."""
+                        max_articles, href_regex, pages=3, wait_timeout=12):
+        """Scraper generik untuk situs yang dirender JavaScript.
+
+        Tunggu sampai tautan artikel situs muncul (bukan jeda tetap), lalu ambil
+        tanggal dari elemen time di kartu artikel bila disediakan.
+        """
         import re
-        from selenium.webdriver.common.by import By
+        try:
+            from selenium.webdriver.common.by import By
+            from selenium.webdriver.support.ui import WebDriverWait
+        except ImportError:
+            print(f"Selenium tidak terpasang; {platform} akan memakai fallback RSS.")
+            return 0
         print(f"Scraping {platform} (via browser) untuk keyword: {keyword}")
         driver = self._get_driver()
         if driver is None:
             print(f"Selesai scraping {platform}: 0 artikel (Selenium tidak tersedia).")
-            return
+            return 0
 
         pattern = re.compile(href_regex)
         found = 0
@@ -330,7 +338,15 @@ class OnlineMediaScraper:
                 driver.get(url)
             except Exception as e:
                 print(f"  Timeout/kesalahan memuat halaman, mencoba lanjut: {repr(e)[:80]}")
-            time.sleep(wait)
+            try:
+                WebDriverWait(driver, wait_timeout).until(
+                    lambda current: any(
+                        pattern.search(anchor.get_attribute('href') or '')
+                        for anchor in current.find_elements(By.CSS_SELECTOR, 'a[href]')
+                    )
+                )
+            except Exception:
+                print(f"  Tautan artikel {platform} tidak muncul sebelum batas tunggu.")
 
             anchors = driver.find_elements(By.CSS_SELECTOR, 'a[href]')
             page_new = 0
@@ -347,7 +363,25 @@ class OnlineMediaScraper:
                 title = max(text.split('\n'), key=len).strip()
                 if len(title) < 15:
                     continue
-                if self._add_article(platform, title, href, keyword, None,
+                article_date = None
+                try:
+                    date_value = driver.execute_script(
+                        "const a=arguments[0]; const card=a.closest('article') || a.parentElement?.parentElement; "
+                        "const t=card?.querySelector('time[datetime], time'); "
+                        "return t?.getAttribute('datetime') || t?.textContent || '';",
+                        a,
+                    )
+                    if date_value:
+                        try:
+                            article_date = datetime.fromisoformat(str(date_value).replace('Z', '+00:00'))
+                            if article_date.tzinfo:
+                                article_date = article_date.astimezone(timezone(timedelta(hours=7))).replace(tzinfo=None)
+                        except ValueError:
+                            article_date = parse_tanggal_id(str(date_value))
+                except Exception:
+                    pass
+
+                if self._add_article(platform, title, href, keyword, article_date,
                                      start_date, end_date):
                     found += 1
                     page_new += 1
@@ -358,32 +392,43 @@ class OnlineMediaScraper:
                 break
 
         print(f"Selesai scraping {platform}: {found} artikel ditemukan.")
+        return found
 
     def scrape_cnn(self, keyword, start_date, end_date, max_articles=50):
         """Scrape CNNIndonesia.com (dirender JavaScript)."""
-        self._scrape_js_site(
+        found = self._scrape_js_site(
             'CNNIndonesia.com',
             'https://www.cnnindonesia.com/search/?query={kw}&page={page}',
             keyword, start_date, end_date, max_articles,
             r'cnnindonesia\.com/[a-z-]+/\d{14}-')
+        if found == 0:
+            self.scrape_google_news(keyword, start_date, end_date, max_articles,
+                                    site_domain='cnnindonesia.com')
 
     def scrape_tempo(self, keyword, start_date, end_date, max_articles=50):
         """Scrape Tempo.co (dirender JavaScript)."""
-        self._scrape_js_site(
+        found = self._scrape_js_site(
             'Tempo.co',
             'https://www.tempo.co/search?q={kw}&page={page}',
             keyword, start_date, end_date, max_articles,
             r'tempo\.co/[^/]+/\d{6,}/')
+        if found == 0:
+            self.scrape_google_news(keyword, start_date, end_date, max_articles,
+                                    site_domain='tempo.co')
 
     def scrape_liputan6(self, keyword, start_date, end_date, max_articles=50):
         """Scrape Liputan6.com (dirender JavaScript)."""
-        self._scrape_js_site(
+        found = self._scrape_js_site(
             'Liputan6.com',
             'https://www.liputan6.com/search?q={kw}&page={page}',
             keyword, start_date, end_date, max_articles,
             r'liputan6\.com/[^/]+/read/\d+/')
+        if found == 0:
+            self.scrape_google_news(keyword, start_date, end_date, max_articles,
+                                    site_domain='liputan6.com')
 
-    def scrape_google_news(self, keyword, start_date, end_date, max_articles=50):
+    def scrape_google_news(self, keyword, start_date, end_date, max_articles=50,
+                           site_domain=None):
         """Cari liputan dari berbagai penerbit melalui RSS Google News.
 
         Google News memperluas jangkauan ke media yang tidak memiliki scraper
@@ -391,7 +436,8 @@ class OnlineMediaScraper:
         ikut tercakup, lalu tanggal RSS divalidasi kembali secara lokal.
         """
         print(f"Scraping Google News untuk keyword: {keyword}")
-        query = f"{keyword} after:{start_date.isoformat()} before:{(end_date + timedelta(days=1)).isoformat()}"
+        site_filter = f" site:{site_domain}" if site_domain else ''
+        query = f"{keyword}{site_filter} after:{start_date.isoformat()} before:{(end_date + timedelta(days=1)).isoformat()}"
         params = urllib.parse.urlencode({
             'q': query,
             'hl': 'id',
