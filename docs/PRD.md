@@ -3,7 +3,7 @@
 **Status:** Draf  
 **Produk:** ScrapeNews / Ruang Berita  
 **Jenis produk:** Aplikasi pencarian dan ekspor berita berbasis web lokal, dengan antarmuka CLI  
-**Dasar dokumen:** Perilaku yang saat ini terlihat di `app.py`, `main.py`, dan `README.md`
+**Dasar dokumen:** Perilaku yang saat ini terlihat di `scrapenews/web.py`, `scrapenews/scraper.py`, dan `README.md`
 
 ## 1. Ringkasan
 
@@ -56,7 +56,7 @@ Asumsi produk saat ini adalah penggunaan lokal oleh satu pengguna. Akun, kolabor
 
 ### CLI
 
-1. Pengguna menjalankan `main.py`.
+1. Pengguna menjalankan `main.py` (entry point CLI di root).
 2. Pengguna memasukkan kata kunci, rentang tanggal, dan batas artikel per portal.
 3. Aplikasi mencari seluruh portal yang dikonfigurasi.
 4. Aplikasi menyimpan hasil dan menampilkan judul yang ditemukan di terminal.

@@ -1,0 +1,55 @@
+
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f4f6f8">
+<title>Ruang Berita | Pencarian Media</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+</head>
+<body>
+<nav class="topbar"><div class="topbar-inner"><div class="brand"><span class="brand-mark">RB</span> Ruang Berita</div><div class="nav-right"><span>MONITORING MEDIA</span><div class="clock-display"><strong id="current-time">--:--:-- WIB</strong><small id="current-date">Memuat tanggal…</small></div><span class="nav-status"><i></i> Siap digunakan</span></div></div></nav>
+<main class="wrap">
+  <section class="page-head"><div><div class="eyebrow">Pencarian berita</div><h1>Temukan liputan yang relevan</h1><p>Atur topik, periode, dan sumber untuk mengumpulkan artikel berita.</p></div><div class="head-meta">7 portal berita tersedia</div></section>
+  <div class="layout">
+    <form method="post" action="/scrape" class="card form-card" id="search-form">
+      <div class="section-heading"><span class="step">01</span><div><h2>Bangun pencarian</h2><p>Tentukan parameter untuk menemukan liputan yang relevan.</p></div></div>
+      <div class="grid">
+        <label class="field">Kata kunci<input type="text" name="keyword" value="{{ form.keyword or '' }}" placeholder="Contoh: ekonomi digital" maxlength="120" required></label>
+        <label class="field">Artikel per portal<input type="number" name="max_articles" value="{{ form.max_articles if form.max_articles is defined else 20 }}" min="1" max="200" required></label>
+        <label class="field">Tanggal mulai<input type="date" name="start_date" value="{{ form.start_date or '' }}" required></label>
+        <label class="field">Tanggal akhir<input type="date" name="end_date" value="{{ form.end_date or '' }}" required></label>
+      </div>
+      <div class="divider"></div>
+      <div class="site-heading"><strong>Pilih sumber berita</strong><span id="selected-count">{{ selected|length }} dari 7 dipilih</span></div>
+      <div class="sites">
+        {% for key, label, _m, tipe in sites %}
+        <label class="site-chip"><input type="checkbox" name="site" value="{{ key }}" {{ 'checked' if key in selected else '' }}><span class="site-name">{{ label }}</span><span class="badge {{ tipe }}">{{ 'CEPAT' if tipe=='statis' else 'BROWSER' }}</span></label>
+        {% endfor %}
+      </div>
+      <p class="hint">Sumber browser memakai Selenium dan mungkin perlu waktu lebih lama untuk memuat halaman.</p>
+      <div class="form-footer"><span class="secure-note"><span>◷</span> Proses berjalan sesuai sumber pilihan</span><button type="submit" id="submit-button">Mulai pencarian <span aria-hidden="true">→</span></button></div>
+    </form>
+    <aside class="card side-card"><div class="side-kicker">Panduan singkat</div><h3>Mulai dengan fokus yang jelas.</h3><div class="side-list">
+      <div class="side-item"><span class="side-icon">⌕</span><div><strong>Tentukan topik</strong><small>Gunakan kata atau frasa yang spesifik.</small></div></div>
+      <div class="side-item"><span class="side-icon">▦</span><div><strong>Pilih periode</strong><small>Atur tanggal untuk mempersempit hasil.</small></div></div>
+      <div class="side-item"><span class="side-icon">↗</span><div><strong>Ekspor temuan</strong><small>Unduh hasil sebagai file CSV atau Excel.</small></div></div>
+    </div><div class="side-rule"></div><div class="side-foot">Hasil dikumpulkan dari portal berita yang dipilih. Ketersediaan artikel bergantung pada akses dan struktur masing-masing situs.</div></aside>
+    {% if did_run %}
+    <section class="card results-card">
+      <div class="results-head"><div class="results-title"><span class="total">{{ results|length }}</span><div><h2>Hasil pencarian</h2><p>Artikel yang cocok untuk “{{ form.keyword }}” · {{ form.start_date }} — {{ form.end_date }}</p></div></div>
+        {% if csv_name or xlsx_name %}<div class="downloads">{% if xlsx_name %}<a class="dl" href="/download/{{ xlsx_name }}">↓ Excel</a>{% endif %}{% if csv_name %}<a class="dl" href="/download/{{ csv_name }}">↓ CSV</a>{% endif %}</div>{% endif %}
+      </div>
+      {% if per_platform %}<div class="platform-stats">{% for plat, n in per_platform.items() %}<span class="stat">{{ plat }} · {{ n }}</span>{% endfor %}</div>{% endif %}
+      {% if results %}<div class="table-scroll"><table><thead><tr><th>#</th><th>Sumber</th><th>Tanggal</th><th>Judul artikel</th><th>Relevansi</th><th></th></tr></thead><tbody>
+      {% for a in results %}<tr><td class="number">{{ loop.index }}</td><td><span class="platform-tag">{{ a.platform }}</span></td><td class="date">{{ a.date }}</td><td class="title">{{ a.title }}</td><td class="score">{{ '%d%%' | format((a.relevance * 100) | round | int) if a.relevance is defined else '—' }}</td><td><a class="article-link" href="{{ a.url }}" target="_blank" rel="noopener">Buka ↗</a></td></tr>{% endfor %}
+      </tbody></table></div>{% else %}<div class="empty"><div class="empty-mark">⌕</div><strong>Belum ada artikel yang cocok</strong>Coba kata kunci lain atau rentang tanggal yang lebih luas.</div>{% endif %}
+    </section>
+    {% endif %}
+  </div>
+  <footer><span>RUANG BERITA · MEDIA INTELLIGENCE</span><span>Untuk riset informasi publik</span></footer>
+</main>
+<script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+</body>
+</html>

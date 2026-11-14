@@ -1,6 +1,6 @@
 # 📰 Scraper Berita Online Indonesia
 
-Aplikasi Python untuk mengumpulkan artikel berita dari berbagai portal berita online Indonesia berdasarkan **keyword** dan **rentang tanggal**, lalu menyimpan hasilnya ke file **CSV** dan **TXT**.
+Aplikasi Python untuk mengumpulkan artikel berita dari berbagai portal berita online Indonesia berdasarkan **kata kunci** dan **rentang tanggal**, lalu menyimpan hasilnya ke file **CSV**, **Excel**, dan **TXT**.
 
 Tersedia dua cara pakai:
 - 🖥️ **Web** (`app.py`) — tampilan browser, pilih portal, lihat tabel, tombol Download CSV
@@ -20,6 +20,24 @@ Tersedia dua cara pakai:
 - [Troubleshooting](#-troubleshooting)
 
 ---
+
+## 🗂️ Struktur Proyek
+
+```text
+.
+├── app.py                     # Entry point web, tetap sederhana
+├── main.py                    # Entry point CLI
+├── requirements.txt
+├── scrapenews/
+│   ├── web.py                 # Route dan alur aplikasi Flask
+│   ├── scraper.py             # Pengumpulan dan ekspor artikel
+│   ├── templates/index.html   # Markup halaman
+│   └── static/                # CSS dan JavaScript UI
+├── docs/                      # Dokumentasi produk
+└── scraped_media_data/         # File hasil saat aplikasi berjalan
+```
+
+Entry point `app.py` dan `main.py` di root menjaga perintah lama tetap berlaku.
 
 ## 📰 Portal yang Didukung
 
